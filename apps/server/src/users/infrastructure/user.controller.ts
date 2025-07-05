@@ -1,4 +1,4 @@
-import { authMiddleware } from "@/shared/auth/auth.middleware";
+import { authMiddleware } from "@/shared/infrastructure/auth/auth.middleware";
 import { env } from "@/shared/infrastructure/env";
 import { UserType } from "@/users/domain/user.type";
 import Elysia, { t } from "elysia";
@@ -8,7 +8,8 @@ import { UserRepository } from "../infrastructure/user.repository";
 import { getAllUsers } from "../application/get-all-users.usecase";
 import { updateUser } from "../application/update-user.usecase";
 import { createUser } from "../application/create-user.usecase";
-import { UnauthorizedError } from "@/shared/errors/unauthorized-error";
+import { UnauthorizedError } from "@/shared/infrastructure/errors/unauthorized-error";
+import { hashPassword } from "@/shared/infrastructure/auth/password";
 
 export const UserController = new Elysia({
   prefix: "/users",
@@ -296,6 +297,48 @@ export const UserController = new Elysia({
         tags: ["Users"],
         summary: "Delete User",
         description: "Delete an existing User by its ID",
+      },
+    }
+  )
+  .post(
+    "/reset-admin-password",
+    async ({ set }) => {
+      try {
+        if (env.NODE_ENV !== "development") {
+          set.status = 403;
+          return { status: "error", message: "Not allowed in production" };
+        }
+        const admin = await UserRepository.getByEmail("admin@gmail.com");
+        if (!admin) {
+          set.status = 404;
+          return { status: "error", message: "Admin not found" };
+        }
+        const hashedPassword = await hashPassword("admin123");
+        await UserRepository.update(admin.id, { password: hashedPassword });
+        return {
+          status: "success",
+          message: "Admin password reset to 'admin123'",
+        };
+      } catch (e: any) {
+        set.status = 500;
+        return {
+          status: "error",
+          message: e.message || "Failed to reset admin password",
+        };
+      }
+    },
+    {
+      response: {
+        200: t.Object({ status: t.String(), message: t.String() }),
+        403: t.Object({ status: t.String(), message: t.String() }),
+        404: t.Object({ status: t.String(), message: t.String() }),
+        500: t.Object({ status: t.String(), message: t.String() }),
+      },
+      detail: {
+        tags: ["Users"],
+        summary: "Reset admin password (dev only)",
+        description:
+          "Temporário: redefine a senha do admin para 'admin123' em dev.",
       },
     }
   );

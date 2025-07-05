@@ -4,7 +4,7 @@ import {
 } from "@/shared/infrastructure/imports.schema";
 import { createId } from "@paralleldrive/cuid2";
 import { sql } from "drizzle-orm";
-import { pgTable, text, timestamp, varchar } from "drizzle-orm/pg-core";
+import { pgTable, timestamp, varchar } from "drizzle-orm/pg-core";
 
 export const usersSchema = pgTable("users", {
   id: varchar("id", { length: ID_LENGTH })

@@ -1,0 +1,116 @@
+import {
+  loginUseCase,
+  LoginUserRequestSchema,
+} from "@/auth/application/login.usecase";
+import { invalidateSessionByToken } from "@/sessions/application/invalidate-session-by-token.usecase";
+import { env } from "@/shared/infrastructure/env";
+import { UserType } from "@/users/domain/user.type";
+import cookie from "@elysiajs/cookie";
+import Elysia, { t } from "elysia";
+
+export const AuthController = new Elysia({
+  prefix: "/auth",
+  tags: ["Auth"],
+})
+  .use(cookie())
+
+  .post(
+    "/login",
+    async ({ body, set, server, request, cookie: { session_lapes_food } }) => {
+      try {
+        const ip = server?.requestIP(request)?.address;
+        const userAgent = request.headers.get("user-agent");
+
+        const user = await loginUseCase({
+          password: body.password,
+          email: body.email,
+          ip: ip || "unknown",
+          userAgent: userAgent || "unknown",
+        });
+
+        session_lapes_food.set({
+          value: user.token,
+          expires: new Date(Date.now() + 1000 * 60 * 60 * 24 * 30),
+          sameSite: "lax",
+          domain: env.NODE_ENV === "production" ? ".lapes.com.br" : "localhost",
+          secure: env.NODE_ENV === "production",
+          httpOnly: true,
+        });
+
+        return { status: "success", data: user };
+      } catch (e) {
+        set.status = 401;
+        return {
+          status: "error",
+          message: e instanceof Error ? e.message : "Authentication failed",
+        };
+      }
+    },
+    {
+      body: LoginUserRequestSchema,
+      response: {
+        200: t.Object({
+          status: t.Literal("success"),
+          data: UserType,
+        }),
+        401: t.Object({
+          status: t.Literal("error"),
+          message: t.String(),
+        }),
+        500: t.Object({
+          status: t.Literal("error"),
+          message: t.String(),
+        }),
+      },
+      detail: {
+        tags: ["Auth"],
+        summary: "Login User",
+        description: "Authenticate a User",
+      },
+    }
+  )
+
+  .post(
+    "/logout",
+    async ({ set, cookie: { session_lapes_food } }) => {
+      if (!session_lapes_food.value) {
+        set.status = 401;
+        return {
+          status: "error",
+          message: "User not authenticated",
+        };
+      }
+
+      session_lapes_food.set({
+        value: "",
+        expires: new Date(0),
+        sameSite: "lax",
+        domain:
+          env.NODE_ENV === "production"
+            ? ".maratonadaamazonia.com.br"
+            : "localhost",
+        secure: env.NODE_ENV === "production",
+        httpOnly: true,
+      });
+
+      await invalidateSessionByToken(session_lapes_food.value);
+
+      return { status: "success" };
+    },
+    {
+      response: {
+        200: t.Object({
+          status: t.Literal("success"),
+        }),
+        401: t.Object({
+          status: t.Literal("error"),
+          message: t.String(),
+        }),
+      },
+      detail: {
+        tags: ["Auth"],
+        summary: "Logout User",
+        description: "Logout a User",
+      },
+    }
+  );

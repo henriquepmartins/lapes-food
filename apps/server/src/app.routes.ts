@@ -1,7 +1,10 @@
 import Elysia from "elysia";
 import { UserController } from "./users/infrastructure/user.controller";
+import { AuthController } from "./auth/infrastructure/auth.controller";
 
-const routes = new Elysia({ prefix: "/v1" }).use(UserController);
+const routes = new Elysia({ prefix: "/v1" })
+  .use(UserController)
+  .use(AuthController);
 
 routes.get("/", () => {
   return {
