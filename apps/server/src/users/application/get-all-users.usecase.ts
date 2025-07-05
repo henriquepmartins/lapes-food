@@ -1,6 +1,6 @@
 import { UserRepository } from "../infrastructure/user.repository";
 
-export const getAllUser = async (params: {
+export const getAllUsers = async (params: {
   page: number;
   limit: number;
   query?: string;

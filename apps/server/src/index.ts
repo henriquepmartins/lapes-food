@@ -64,7 +64,7 @@ async function startServer() {
   try {
     await app.listen(env.PORT);
     console.log(
-      `  🧑‍💻Lapes API \n
+      ` 🧑‍💻Lapes API \n
   ⏳ Time: ${new Date().toISOString()} \n
   🚪 Port: ${app.server?.port} \n
   🌐 URL: http://localhost:${app.server?.port} \n
