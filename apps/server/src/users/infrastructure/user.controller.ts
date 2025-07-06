@@ -1,4 +1,4 @@
-import { authMiddleware } from "@/shared/auth/auth.middleware";
+import { authMiddleware } from "@/shared/infrastructure/auth/auth.middleware";
 import { env } from "@/shared/infrastructure/env";
 import { UserType } from "@/users/domain/user.type";
 import Elysia, { t } from "elysia";
@@ -8,7 +8,8 @@ import { UserRepository } from "../infrastructure/user.repository";
 import { getAllUsers } from "../application/get-all-users.usecase";
 import { updateUser } from "../application/update-user.usecase";
 import { createUser } from "../application/create-user.usecase";
-import { UnauthorizedError } from "@/shared/errors/unauthorized-error";
+import { UnauthorizedError } from "@/shared/infrastructure/errors/unauthorized-error";
+import { hashPassword } from "@/shared/infrastructure/auth/password";
 
 export const UserController = new Elysia({
   prefix: "/users",
@@ -50,8 +51,39 @@ export const UserController = new Elysia({
       },
       detail: {
         tags: ["Users"],
-        summary: "Create User",
-        description: "Create a new user",
+        summary: "Criar usuário",
+        description: "Cria um novo usuário no sistema.",
+        responses: {
+          200: {
+            description: "Usuário criado com sucesso.",
+            content: {
+              "application/json": {
+                example: {
+                  status: "success",
+                  data: {
+                    id: "user-uuid",
+                    email: "novo@email.com",
+                    firstName: "Novo",
+                    lastName: "Usuário",
+                    role: "customer",
+                    createdAt: "2024-01-01T00:00:00.000Z",
+                  },
+                },
+              },
+            },
+          },
+          400: {
+            description: "Erro ao criar usuário.",
+            content: {
+              "application/json": {
+                example: {
+                  status: "error",
+                  message: "Email já cadastrado",
+                },
+              },
+            },
+          },
+        },
       },
     }
   )
@@ -100,8 +132,30 @@ export const UserController = new Elysia({
       },
       detail: {
         tags: ["Users"],
-        summary: "Get all Users",
-        description: "Retrieve a list of all Users",
+        summary: "Listar usuários",
+        description: "Retorna uma lista de todos os usuários cadastrados.",
+        responses: {
+          200: {
+            description: "Lista de usuários.",
+            content: {
+              "application/json": {
+                example: {
+                  status: "success",
+                  data: [
+                    {
+                      id: "user-uuid",
+                      email: "usuario@email.com",
+                      firstName: "Usuário",
+                      lastName: "Teste",
+                      role: "customer",
+                      createdAt: "2024-01-01T00:00:00.000Z",
+                    },
+                  ],
+                },
+              },
+            },
+          },
+        },
       },
     }
   )
@@ -159,8 +213,39 @@ export const UserController = new Elysia({
       },
       detail: {
         tags: ["Users"],
-        summary: "Get User by ID",
-        description: "Retrieve a User by its ID",
+        summary: "Buscar usuário por ID",
+        description: "Retorna os dados de um usuário pelo seu ID.",
+        responses: {
+          200: {
+            description: "Usuário encontrado.",
+            content: {
+              "application/json": {
+                example: {
+                  status: "success",
+                  data: {
+                    id: "user-uuid",
+                    email: "usuario@email.com",
+                    firstName: "Usuário",
+                    lastName: "Teste",
+                    role: "customer",
+                    createdAt: "2024-01-01T00:00:00.000Z",
+                  },
+                },
+              },
+            },
+          },
+          404: {
+            description: "Usuário não encontrado.",
+            content: {
+              "application/json": {
+                example: {
+                  status: "error",
+                  message: "User not found",
+                },
+              },
+            },
+          },
+        },
       },
     }
   )
@@ -249,9 +334,49 @@ export const UserController = new Elysia({
       },
       detail: {
         tags: ["Users"],
-        summary: "Update User",
-        description:
-          "Update an existing User with the provided data, updating the profile picture if fileName and fileSize are provided",
+        summary: "Atualizar usuário",
+        description: "Atualiza os dados de um usuário existente.",
+        requestBody: {
+          content: {
+            "application/json": {
+              example: {
+                firstName: "NovoNome",
+                lastName: "Atualizado",
+              },
+            },
+          },
+        },
+        responses: {
+          200: {
+            description: "Usuário atualizado com sucesso.",
+            content: {
+              "application/json": {
+                example: {
+                  status: "success",
+                  data: {
+                    id: "user-uuid",
+                    email: "usuario@email.com",
+                    firstName: "NovoNome",
+                    lastName: "Atualizado",
+                    role: "customer",
+                    createdAt: "2024-01-01T00:00:00.000Z",
+                  },
+                },
+              },
+            },
+          },
+          404: {
+            description: "Usuário não encontrado.",
+            content: {
+              "application/json": {
+                example: {
+                  status: "error",
+                  message: "User not found",
+                },
+              },
+            },
+          },
+        },
       },
     }
   )
@@ -272,11 +397,6 @@ export const UserController = new Elysia({
       }
     },
     {
-      beforeHandle() {
-        if (env.NODE_ENV === "production") {
-          throw new Error("Not allowed in production");
-        }
-      },
       response: {
         200: t.Object({
           status: t.String(),
@@ -292,10 +412,9 @@ export const UserController = new Elysia({
         }),
       },
       detail: {
-        hide: true,
         tags: ["Users"],
-        summary: "Delete User",
-        description: "Delete an existing User by its ID",
+        summary: "Deletar usuário",
+        description: "Deleta um usuário existente pelo ID. ",
       },
     }
   );

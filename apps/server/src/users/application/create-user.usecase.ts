@@ -1,5 +1,6 @@
 import { UserRepository } from "@/users/infrastructure/user.repository";
 import type { User } from "../domain/user.type";
+import { hashPassword } from "@/shared/infrastructure/auth/password";
 
 export const createUser = async (
   user: Omit<User, "id" | "createdAt" | "updatedAt">
@@ -10,9 +11,13 @@ export const createUser = async (
     throw new Error("Email is already in use");
   }
 
+  const hashedPassword = user.password
+    ? await hashPassword(user.password)
+    : null;
+
   const newUser = await UserRepository.create({
     ...user,
-    role: "customer",
+    password: hashedPassword,
   });
 
   return {
