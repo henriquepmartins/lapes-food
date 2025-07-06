@@ -6,7 +6,7 @@
     "build": "tsc && tsc-alias",
     "check-types": "tsc --noEmit",
     "compile": "bun build --compile --minify --sourcemap --bytecode ./src/index.ts --outfile server",
-    "dev": "bun --hot run ./src/index.ts",
+    "dev": "bun --watch src/index.ts",
     "start": "bun run dist/src/index.js",
     "db:push": "drizzle-kit push",
     "db:studio": "drizzle-kit studio",
@@ -21,6 +21,7 @@
     "@oslojs/crypto": "^1.0.1",
     "@oslojs/encoding": "^1.1.0",
     "better-auth": "^1.2.10",
+    "browsersync": "^0.0.1-security",
     "dotenv": "^16.4.7",
     "drizzle-orm": "^0.44.2",
     "elysia": "^1.2.25",
@@ -28,9 +29,10 @@
     "zod": "^3.25.16"
   },
   "devDependencies": {
-    "tsc-alias": "^1.8.11",
-    "typescript": "^5.8.2",
     "@types/bun": "^1.2.6",
-    "drizzle-kit": "^0.31.2"
+    "browser-sync": "^3.0.4",
+    "drizzle-kit": "^0.31.2",
+    "tsc-alias": "^1.8.11",
+    "typescript": "^5.8.2"
   }
 }
