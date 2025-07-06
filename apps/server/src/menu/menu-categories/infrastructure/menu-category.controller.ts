@@ -7,6 +7,7 @@ import { UnauthorizedError } from "@/shared/infrastructure/errors/unauthorized-e
 import { getCategoryById } from "../application/get-category-by-id.usecase";
 import { updateCategory } from "../application/update-category.usecase";
 import type { CreateMenuCategoryParams } from "../infrastructure/menu-category.repository";
+import { deleteCategoryById } from "../application/delete-category-by-id.usecase";
 
 export const MenuCategoryController = new Elysia({
   prefix: "/menu-categories",
@@ -331,6 +332,7 @@ export const MenuCategoryController = new Elysia({
           };
         }
 
+        await deleteCategoryById(params.id);
         return {
           status: "success",
           data: { message: "Menu category deleted successfully." },

@@ -93,4 +93,12 @@ export class MenuCategoryRepository {
       .returning();
     return deletedCategory;
   }
+
+  static async findByName(name: string): Promise<MenuCategoryRecord | null> {
+    const [category] = await db
+      .select()
+      .from(menuCategoriesSchema)
+      .where(eq(menuCategoriesSchema.name, name));
+    return category;
+  }
 }
