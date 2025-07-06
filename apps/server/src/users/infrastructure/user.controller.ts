@@ -51,8 +51,39 @@ export const UserController = new Elysia({
       },
       detail: {
         tags: ["Users"],
-        summary: "Create User",
-        description: "Create a new user",
+        summary: "Criar usuário",
+        description: "Cria um novo usuário no sistema.",
+        responses: {
+          200: {
+            description: "Usuário criado com sucesso.",
+            content: {
+              "application/json": {
+                example: {
+                  status: "success",
+                  data: {
+                    id: "user-uuid",
+                    email: "novo@email.com",
+                    firstName: "Novo",
+                    lastName: "Usuário",
+                    role: "customer",
+                    createdAt: "2024-01-01T00:00:00.000Z",
+                  },
+                },
+              },
+            },
+          },
+          400: {
+            description: "Erro ao criar usuário.",
+            content: {
+              "application/json": {
+                example: {
+                  status: "error",
+                  message: "Email já cadastrado",
+                },
+              },
+            },
+          },
+        },
       },
     }
   )
@@ -101,8 +132,30 @@ export const UserController = new Elysia({
       },
       detail: {
         tags: ["Users"],
-        summary: "Get all Users",
-        description: "Retrieve a list of all Users",
+        summary: "Listar usuários",
+        description: "Retorna uma lista de todos os usuários cadastrados.",
+        responses: {
+          200: {
+            description: "Lista de usuários.",
+            content: {
+              "application/json": {
+                example: {
+                  status: "success",
+                  data: [
+                    {
+                      id: "user-uuid",
+                      email: "usuario@email.com",
+                      firstName: "Usuário",
+                      lastName: "Teste",
+                      role: "customer",
+                      createdAt: "2024-01-01T00:00:00.000Z",
+                    },
+                  ],
+                },
+              },
+            },
+          },
+        },
       },
     }
   )
@@ -160,8 +213,39 @@ export const UserController = new Elysia({
       },
       detail: {
         tags: ["Users"],
-        summary: "Get User by ID",
-        description: "Retrieve a User by its ID",
+        summary: "Buscar usuário por ID",
+        description: "Retorna os dados de um usuário pelo seu ID.",
+        responses: {
+          200: {
+            description: "Usuário encontrado.",
+            content: {
+              "application/json": {
+                example: {
+                  status: "success",
+                  data: {
+                    id: "user-uuid",
+                    email: "usuario@email.com",
+                    firstName: "Usuário",
+                    lastName: "Teste",
+                    role: "customer",
+                    createdAt: "2024-01-01T00:00:00.000Z",
+                  },
+                },
+              },
+            },
+          },
+          404: {
+            description: "Usuário não encontrado.",
+            content: {
+              "application/json": {
+                example: {
+                  status: "error",
+                  message: "User not found",
+                },
+              },
+            },
+          },
+        },
       },
     }
   )
@@ -250,9 +334,49 @@ export const UserController = new Elysia({
       },
       detail: {
         tags: ["Users"],
-        summary: "Update User",
-        description:
-          "Update an existing User with the provided data, updating the profile picture if fileName and fileSize are provided",
+        summary: "Atualizar usuário",
+        description: "Atualiza os dados de um usuário existente.",
+        requestBody: {
+          content: {
+            "application/json": {
+              example: {
+                firstName: "NovoNome",
+                lastName: "Atualizado",
+              },
+            },
+          },
+        },
+        responses: {
+          200: {
+            description: "Usuário atualizado com sucesso.",
+            content: {
+              "application/json": {
+                example: {
+                  status: "success",
+                  data: {
+                    id: "user-uuid",
+                    email: "usuario@email.com",
+                    firstName: "NovoNome",
+                    lastName: "Atualizado",
+                    role: "customer",
+                    createdAt: "2024-01-01T00:00:00.000Z",
+                  },
+                },
+              },
+            },
+          },
+          404: {
+            description: "Usuário não encontrado.",
+            content: {
+              "application/json": {
+                example: {
+                  status: "error",
+                  message: "User not found",
+                },
+              },
+            },
+          },
+        },
       },
     }
   )
@@ -295,50 +419,9 @@ export const UserController = new Elysia({
       detail: {
         hide: true,
         tags: ["Users"],
-        summary: "Delete User",
-        description: "Delete an existing User by its ID",
-      },
-    }
-  )
-  .post(
-    "/reset-admin-password",
-    async ({ set }) => {
-      try {
-        if (env.NODE_ENV !== "development") {
-          set.status = 403;
-          return { status: "error", message: "Not allowed in production" };
-        }
-        const admin = await UserRepository.getByEmail("admin@gmail.com");
-        if (!admin) {
-          set.status = 404;
-          return { status: "error", message: "Admin not found" };
-        }
-        const hashedPassword = await hashPassword("admin123");
-        await UserRepository.update(admin.id, { password: hashedPassword });
-        return {
-          status: "success",
-          message: "Admin password reset to 'admin123'",
-        };
-      } catch (e: any) {
-        set.status = 500;
-        return {
-          status: "error",
-          message: e.message || "Failed to reset admin password",
-        };
-      }
-    },
-    {
-      response: {
-        200: t.Object({ status: t.String(), message: t.String() }),
-        403: t.Object({ status: t.String(), message: t.String() }),
-        404: t.Object({ status: t.String(), message: t.String() }),
-        500: t.Object({ status: t.String(), message: t.String() }),
-      },
-      detail: {
-        tags: ["Users"],
-        summary: "Reset admin password (dev only)",
+        summary: "Deletar usuário (dev)",
         description:
-          "Temporário: redefine a senha do admin para 'admin123' em dev.",
+          "Deleta um usuário existente pelo ID. Disponível apenas em desenvolvimento.",
       },
     }
   );

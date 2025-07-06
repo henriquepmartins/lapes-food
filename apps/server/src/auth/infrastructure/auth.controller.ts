@@ -64,8 +64,50 @@ export const AuthController = new Elysia({
       },
       detail: {
         tags: ["Auth"],
-        summary: "Login User",
-        description: "Authenticate a User",
+        summary: "Login do usuário",
+        description:
+          "Autentica um usuário e retorna o token de sessão no cookie `session_lapes_food`. Use este cookie para autenticar requisições futuras.",
+        requestBody: {
+          content: {
+            "application/json": {
+              example: {
+                email: "usuario@email.com",
+                password: "senha123",
+              },
+            },
+          },
+        },
+        responses: {
+          200: {
+            description: "Usuário autenticado com sucesso.",
+            content: {
+              "application/json": {
+                example: {
+                  status: "success",
+                  data: {
+                    id: "user-uuid",
+                    email: "usuario@email.com",
+                    firstName: "Usuário",
+                    lastName: "Teste",
+                    role: "customer",
+                    createdAt: "2024-01-01T00:00:00.000Z",
+                  },
+                },
+              },
+            },
+          },
+          401: {
+            description: "Falha na autenticação.",
+            content: {
+              "application/json": {
+                example: {
+                  status: "error",
+                  message: "User not found",
+                },
+              },
+            },
+          },
+        },
       },
     }
   )
@@ -109,8 +151,32 @@ export const AuthController = new Elysia({
       },
       detail: {
         tags: ["Auth"],
-        summary: "Logout User",
-        description: "Logout a User",
+        summary: "Logout do usuário",
+        description:
+          "Encerra a sessão do usuário autenticado, removendo o cookie de sessão.",
+        responses: {
+          200: {
+            description: "Logout realizado com sucesso.",
+            content: {
+              "application/json": {
+                example: {
+                  status: "success",
+                },
+              },
+            },
+          },
+          401: {
+            description: "Usuário não autenticado.",
+            content: {
+              "application/json": {
+                example: {
+                  status: "error",
+                  message: "User not authenticated",
+                },
+              },
+            },
+          },
+        },
       },
     }
   );

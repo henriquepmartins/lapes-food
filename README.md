@@ -22,6 +22,7 @@ First, install the dependencies:
 ```bash
 bun install
 ```
+
 ## Database Setup
 
 This project uses PostgreSQL with Drizzle ORM.
@@ -30,10 +31,10 @@ This project uses PostgreSQL with Drizzle ORM.
 2. Update your `apps/server/.env` file with your PostgreSQL connection details.
 
 3. Apply the schema to your database:
+
 ```bash
 bun db:push
 ```
-
 
 Then, run the development server:
 
@@ -43,8 +44,6 @@ bun dev
 
 Open [http://localhost:3001](http://localhost:3001) in your browser to see the web application.
 The API is running at [http://localhost:3000](http://localhost:3000).
-
-
 
 ## Project Structure
 
@@ -64,3 +63,21 @@ lapes-food/
 - `bun check-types`: Check TypeScript types across all apps
 - `bun db:push`: Push schema changes to database
 - `bun db:studio`: Open database studio UI
+
+## Documentação da API
+
+A documentação interativa da API está disponível via Swagger:
+
+- **Ambiente de desenvolvimento:** [http://localhost:3000/docs](http://localhost:3000/docs)
+- **Produção:** [https://api.lapes.com.br/docs](https://api.lapes.com.br/docs)
+
+### Autenticação
+
+A maioria dos endpoints requer autenticação via cookie de sessão (`session_lapes_food`).
+
+1. Faça login usando o endpoint `/auth/login` para receber o cookie de sessão.
+2. Inclua o cookie nas requisições subsequentes para acessar endpoints protegidos.
+
+### Exemplos de uso
+
+Acesse `/docs` para visualizar exemplos de requisições, respostas e schemas diretamente na interface Swagger.

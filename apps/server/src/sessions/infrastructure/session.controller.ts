@@ -85,8 +85,50 @@ export const SessionController = new Elysia({
       },
       detail: {
         tags: ["Session"],
-        summary: "Validate Session",
-        description: "Validate a session token",
+        summary: "Validar sessão",
+        description:
+          "Valida o token de sessão presente no cookie `session_lapes_food` e retorna os dados da sessão e do usuário.",
+        responses: {
+          200: {
+            description: "Sessão válida.",
+            content: {
+              "application/json": {
+                example: {
+                  status: "success",
+                  data: {
+                    session: {
+                      id: "session-uuid",
+                      userId: "user-uuid",
+                      expiresAt: "2024-02-01T00:00:00.000Z",
+                      createdAt: "2024-01-01T00:00:00.000Z",
+                      updatedAt: "2024-01-10T00:00:00.000Z",
+                    },
+                    user: {
+                      id: "user-uuid",
+                      email: "usuario@email.com",
+                      firstName: "Usuário",
+                      lastName: "Teste",
+                      role: "customer",
+                      createdAt: "2024-01-01T00:00:00.000Z",
+                      updatedAt: "2024-01-10T00:00:00.000Z",
+                    },
+                  },
+                },
+              },
+            },
+          },
+          500: {
+            description: "Erro ao validar sessão.",
+            content: {
+              "application/json": {
+                example: {
+                  status: "error",
+                  message: "Session token not found",
+                },
+              },
+            },
+          },
+        },
       },
     }
   );
