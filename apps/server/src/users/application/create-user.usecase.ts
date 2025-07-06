@@ -18,7 +18,6 @@ export const createUser = async (
   const newUser = await UserRepository.create({
     ...user,
     password: hashedPassword,
-    role: "customer",
   });
 
   return {

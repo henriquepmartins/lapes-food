@@ -397,11 +397,6 @@ export const UserController = new Elysia({
       }
     },
     {
-      beforeHandle() {
-        if (env.NODE_ENV === "production") {
-          throw new Error("Not allowed in production");
-        }
-      },
       response: {
         200: t.Object({
           status: t.String(),
@@ -417,11 +412,9 @@ export const UserController = new Elysia({
         }),
       },
       detail: {
-        hide: true,
         tags: ["Users"],
-        summary: "Deletar usuário (dev)",
-        description:
-          "Deleta um usuário existente pelo ID. Disponível apenas em desenvolvimento.",
+        summary: "Deletar usuário",
+        description: "Deleta um usuário existente pelo ID. ",
       },
     }
   );

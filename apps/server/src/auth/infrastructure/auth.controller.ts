@@ -7,12 +7,15 @@ import { env } from "@/shared/infrastructure/env";
 import { UserType } from "@/users/domain/user.type";
 import cookie from "@elysiajs/cookie";
 import Elysia, { t } from "elysia";
+import { changePassword } from "../application/request-password-change.usecase";
+import { authMiddleware } from "@/shared/infrastructure/auth/auth.middleware";
 
 export const AuthController = new Elysia({
   prefix: "/auth",
   tags: ["Auth"],
 })
   .use(cookie())
+  .use(authMiddleware)
 
   .post(
     "/login",
@@ -177,6 +180,76 @@ export const AuthController = new Elysia({
             },
           },
         },
+      },
+    }
+  )
+
+  .put(
+    "/change-password",
+    async ({ body, set, validateSession }) => {
+      try {
+        const user = await validateSession();
+        if (!user) {
+          set.status = 401;
+          return {
+            status: "error",
+            message: "Unauthorized user",
+          };
+        }
+
+        const userMail = user.email;
+
+        const result = await changePassword(
+          userMail,
+          body.currentPassword,
+          body.newPassword,
+          body.confirmationNewPassword
+        );
+        if (!result) {
+          set.status = 400;
+          return {
+            status: "error",
+            message: "Invalid email or password",
+          };
+        }
+        set.status = 200;
+        return {
+          status: "success",
+          message: "Password changed successfully",
+        };
+      } catch (e) {
+        set.status = 500;
+        return {
+          status: "error",
+          message: e instanceof Error ? e.message : "Change password failed",
+        };
+      }
+    },
+    {
+      body: t.Object({
+        currentPassword: t.String(),
+        newPassword: t.String(),
+        confirmationNewPassword: t.String(),
+      }),
+      response: {
+        200: t.Object({
+          status: t.Literal("success"),
+          message: t.String(),
+        }),
+        500: t.Object({
+          status: t.Literal("error"),
+          message: t.String(),
+        }),
+        400: t.Object({
+          status: t.Literal("error"),
+          message: t.String(),
+        }),
+      },
+      detail: {
+        tags: ["Auth"],
+        summary: "Alterar senha do usuário",
+        description:
+          "Altera a senha do usuário autenticado. Requer autenticação.",
       },
     }
   );
