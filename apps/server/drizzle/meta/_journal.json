@@ -15,6 +15,13 @@
       "when": 1751734907375,
       "tag": "0001_regular_marvel_zombies",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1751811101540,
+      "tag": "0002_chemical_nova",
+      "breakpoints": true
     }
   ]
 }
