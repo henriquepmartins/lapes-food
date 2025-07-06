@@ -331,10 +331,36 @@ export const MenuItemController = new Elysia({
           };
         }
 
-        const menuItem = await updateMenuItemUsecase(
-          params.id,
-          body as CreateMenuItemParams
-        );
+        const { categoryId, categoryName, ...rest } = body as typeof body & {
+          categoryName?: string;
+        };
+        let resolvedCategoryId = categoryId;
+        if (!resolvedCategoryId && categoryName) {
+          const category = await MenuCategoryRepository.findByName(
+            categoryName
+          );
+          if (!category) {
+            set.status = 400;
+            return { status: "error", message: "Category not found" };
+          }
+          resolvedCategoryId = category.id;
+        }
+        if (!resolvedCategoryId) {
+          set.status = 400;
+          return {
+            status: "error",
+            message: "Category ID or name is required",
+          };
+        }
+
+        const menuItem = await updateMenuItemUsecase(params.id, {
+          ...rest,
+          categoryId:
+            typeof resolvedCategoryId === "number"
+              ? String(resolvedCategoryId)
+              : resolvedCategoryId,
+          isAvailable: body.isAvailable ? 1 : 0,
+        });
         return {
           status: "success",
           data: {
@@ -366,6 +392,7 @@ export const MenuItemController = new Elysia({
       }
     },
     {
+      body: t.Omit(MenuItemType, ["id", "createdAt", "updatedAt"]),
       response: {
         200: t.Object({
           status: t.Literal("success"),

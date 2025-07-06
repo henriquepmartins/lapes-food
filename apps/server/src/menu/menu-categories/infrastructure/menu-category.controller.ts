@@ -300,6 +300,7 @@ export const MenuCategoryController = new Elysia({
       }
     },
     {
+      body: t.Omit(MenuCategoryType, ["id", "createdAt", "updatedAt"]),
       response: {
         200: t.Object({
           status: t.Literal("success"),
