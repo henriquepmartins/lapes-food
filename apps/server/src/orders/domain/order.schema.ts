@@ -1,4 +1,10 @@
-import { integer, pgTable, timestamp, varchar } from "drizzle-orm/pg-core";
+import {
+  integer,
+  pgTable,
+  text,
+  timestamp,
+  varchar,
+} from "drizzle-orm/pg-core";
 import {
   ID_LENGTH,
   orderStatusEnum,
@@ -14,10 +20,12 @@ export const OrderSchema = pgTable("orders", {
   price: integer("price").notNull(),
   orderNumber: integer("order_number").notNull(),
   status: orderStatusEnum("status").notNull().default("active"),
+  description: text("description"),
   createdAt: timestamp("created_at", { withTimezone: true })
     .default(sql`CURRENT_TIMESTAMP`)
     .notNull(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).$onUpdate(
     () => new Date()
   ),
+  userId: varchar("user_id", { length: ID_LENGTH }).notNull(),
 });

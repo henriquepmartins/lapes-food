@@ -8,6 +8,8 @@ export const OrderType = t.Object({
   status: t.String(),
   createdAt: t.Date(),
   updatedAt: t.Date(),
+  userId: t.String(),
+  description: t.Optional(t.String()),
 });
 
 export type Order = Static<typeof OrderType>;

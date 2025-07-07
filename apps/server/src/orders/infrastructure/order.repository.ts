@@ -12,6 +12,8 @@ export interface OrderRecord {
   status: string;
   createdAt: Date;
   updatedAt: Date | null;
+  userId: string;
+  description?: string | null;
 }
 
 export interface CreateOrderParams {
@@ -19,6 +21,8 @@ export interface CreateOrderParams {
   price: number;
   orderNumber: number;
   status: "active" | "completed" | "cancelled";
+  userId: string;
+  description?: string | null;
 }
 
 export class OrderRepository {
@@ -31,8 +35,9 @@ export class OrderRepository {
     page: number;
     limit: number;
     query?: string;
+    user?: { id: string; role: string };
   }): Promise<{ orders: OrderRecord[]; total: number }> {
-    const { page, limit, query } = params;
+    const { page, limit, query, user } = params;
     const offset = (page - 1) * limit;
     const nameParts = query ? query.trim().split(" ") : [];
 
@@ -47,17 +52,30 @@ export class OrderRepository {
         )
       : undefined;
 
+    let whereCondition = searchCondition;
+    if (user) {
+      if (user.role === "customer") {
+        whereCondition = whereCondition
+          ? and(whereCondition, eq(OrderSchema.userId, user.id))
+          : eq(OrderSchema.userId, user.id);
+      } else if (user.role === "kitchen") {
+        whereCondition = whereCondition
+          ? and(whereCondition, eq(OrderSchema.status, "active"))
+          : eq(OrderSchema.status, "active");
+      }
+    }
+
     const orders = await db
       .select()
       .from(OrderSchema)
-      .where(searchCondition)
+      .where(whereCondition)
       .limit(limit)
       .offset(offset);
 
     const totalResult = await db
       .select({ count: count() })
       .from(OrderSchema)
-      .where(searchCondition);
+      .where(whereCondition);
 
     const total = totalResult[0].count;
 
