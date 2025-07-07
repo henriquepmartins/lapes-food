@@ -4,7 +4,7 @@ import { neon } from "@neondatabase/serverless";
 
 import { env } from "./env";
 
-import * as schema from "@/schema";
+import * as schema from "../../schema";
 
 const sql = neon(env.DATABASE_URL);
 
