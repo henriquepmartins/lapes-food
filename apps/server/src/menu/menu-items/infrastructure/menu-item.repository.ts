@@ -14,28 +14,16 @@ export interface MenuItemRecord {
 }
 
 export interface CreateMenuItemParams {
-  categoryId?: string;
-  categoryName?: string;
+  categoryId: string;
   name: string;
-  description?: string | null;
+  description: string | null;
   price: number;
   isAvailable: number;
 }
 
 export class MenuItemRepository {
   static async create(params: CreateMenuItemParams): Promise<MenuItemRecord> {
-    const { categoryId, name, description, price, isAvailable } = params;
-    if (!categoryId) throw new Error("categoryId is required for DB insert");
-    const [newItem] = await db
-      .insert(menuItems)
-      .values({
-        categoryId,
-        name,
-        description: description ?? null,
-        price,
-        isAvailable,
-      })
-      .returning();
+    const [newItem] = await db.insert(menuItems).values(params).returning();
     return newItem;
   }
 
