@@ -15,6 +15,9 @@ export const UserController = new Elysia({
   prefix: "/users",
   tags: ["Users"],
 })
+
+  .use(authMiddleware)
+
   .post(
     "/create",
     async ({ body, set }) => {
@@ -87,8 +90,6 @@ export const UserController = new Elysia({
       },
     }
   )
-  .use(authMiddleware)
-
   .get(
     "/",
     async ({ set, validateSession }) => {
@@ -413,7 +414,7 @@ export const UserController = new Elysia({
       },
       detail: {
         tags: ["Users"],
-        summary: "Deletar usuário",
+        summary: "Deletar usuário (dev)",
         description: "Deleta um usuário existente pelo ID. ",
       },
     }

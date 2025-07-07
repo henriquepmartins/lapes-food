@@ -1,10 +1,16 @@
 import Elysia from "elysia";
 import { UserController } from "./users/infrastructure/user.controller";
 import { AuthController } from "./auth/infrastructure/auth.controller";
+import { MenuCategoryController } from "./menu/menu-categories/infrastructure/menu-category.controller";
+import { MenuItemController } from "./menu/menu-items/infrastructure/menu-item.controller";
+import { MenuPhotoController } from "./menu/menu-photos/infrastructure/menu-photo.controller";
 
 const routes = new Elysia({ prefix: "/v1" })
   .use(UserController)
-  .use(AuthController);
+  .use(AuthController)
+  .use(MenuCategoryController)
+  .use(MenuItemController)
+  .use(MenuPhotoController);
 
 routes.get("/", () => {
   return {

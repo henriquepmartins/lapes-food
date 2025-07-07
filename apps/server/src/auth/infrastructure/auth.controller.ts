@@ -9,6 +9,7 @@ import cookie from "@elysiajs/cookie";
 import Elysia, { t } from "elysia";
 import { changePassword } from "../application/request-password-change.usecase";
 import { authMiddleware } from "@/shared/infrastructure/auth/auth.middleware";
+import { verifyLoggedUser } from "../application/verify-logged-user.usecase";
 
 export const AuthController = new Elysia({
   prefix: "/auth",
@@ -250,6 +251,41 @@ export const AuthController = new Elysia({
         summary: "Alterar senha do usuário",
         description:
           "Altera a senha do usuário autenticado. Requer autenticação.",
+      },
+    }
+  )
+
+  .get(
+    "/me",
+    async ({ validateSession }) => {
+      const user = await validateSession();
+      if (!user) {
+        return { status: "error", message: "Unauthorized user" };
+      }
+
+      const userWithStringDate = {
+        ...user,
+        createdAt: user.createdAt.toISOString(),
+      };
+
+      const userInfo = await verifyLoggedUser(userWithStringDate);
+      return { status: "success", data: userInfo };
+    },
+    {
+      response: {
+        200: t.Object({
+          status: t.Literal("success"),
+          data: UserType,
+        }),
+        401: t.Object({
+          status: t.Literal("error"),
+          message: t.String(),
+        }),
+      },
+      detail: {
+        tags: ["Auth"],
+        summary: "Obter informações do usuário autenticado",
+        description: "Retorna as informações do usuário autenticado.",
       },
     }
   );
