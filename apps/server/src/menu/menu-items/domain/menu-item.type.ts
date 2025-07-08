@@ -9,7 +9,6 @@ export const MenuItemType = t.Object({
   isAvailable: t.Boolean(),
   createdAt: t.String(),
   updatedAt: t.String(),
-  slug: t.String(),
 });
 
 export type MenuItem = Static<typeof MenuItemType>;

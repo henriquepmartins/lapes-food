@@ -22,7 +22,6 @@ export const OrderController = new Elysia({
       try {
         const user = await validateSession();
 
-        // Validate menu item IDs
         const { items, description } = body;
         if (!Array.isArray(items) || items.length === 0) {
           set.status = 400;
@@ -32,7 +31,10 @@ export const OrderController = new Elysia({
           };
         }
         const menuItems = await Promise.all(
-          items.map(async (id) => await MenuItemRepository.getById(id))
+          items.map(async (id) => {
+            const item = await MenuItemRepository.getById(id);
+            return item;
+          })
         );
         if (menuItems.some((item) => !item || !item.isAvailable)) {
           set.status = 400;
@@ -41,20 +43,18 @@ export const OrderController = new Elysia({
             message: "One or more menu items are invalid or unavailable.",
           };
         }
-        // All items are non-null and available at this point
         const validMenuItems = menuItems.filter(
           (item): item is NonNullable<typeof item> => !!item
         );
-        // Calculate total price
         const totalPrice = validMenuItems.reduce(
           (sum, item) => sum + item.price,
           0
         );
-        // Generate a title (e.g., "Order for user {user.id}")
-        const title = `Order for user ${user.id}`;
-        // Generate order number (could be improved for concurrency)
+
+        const title = validMenuItems.map((item) => item.name).join(", ");
         const orderNumber = Math.floor(Math.random() * 1000000);
         const status = "active";
+
         const order = await createOrder({
           title,
           price: totalPrice,
@@ -63,6 +63,7 @@ export const OrderController = new Elysia({
           userId: user.id,
           description,
         });
+
         return {
           status: "success",
           data: {
