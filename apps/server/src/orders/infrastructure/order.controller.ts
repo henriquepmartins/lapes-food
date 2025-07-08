@@ -117,23 +117,22 @@ export const OrderController = new Elysia({
 
   .get(
     "/",
-    async ({ validateSession, query }) => {
+    async ({ validateSession, set }) => {
       const user = await validateSession();
 
       if (!user || user.role !== "admin") {
+        set.status = 401;
         return {
           status: "error",
           message: "Unauthorized",
         };
       }
 
-      const page = query.page ?? 1;
-      const limit = query.limit ?? 10;
-
       const orders = await getAllOrders({
-        page,
-        limit,
         user,
+        page: 1,
+        limit: 10,
+        query: "",
       });
 
       return {
@@ -143,10 +142,6 @@ export const OrderController = new Elysia({
       };
     },
     {
-      query: t.Object({
-        page: t.Optional(t.Number()),
-        limit: t.Optional(t.Number()),
-      }),
       response: {
         200: t.Object({
           status: t.String(),
