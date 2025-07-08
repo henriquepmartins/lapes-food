@@ -11,6 +11,7 @@ export interface MenuItemRecord {
   isAvailable: number;
   createdAt: Date;
   updatedAt: Date | null;
+  slug: string;
 }
 
 export interface CreateMenuItemParams {
@@ -19,6 +20,7 @@ export interface CreateMenuItemParams {
   description: string | null;
   price: number;
   isAvailable: number;
+  slug: string;
 }
 
 export class MenuItemRepository {

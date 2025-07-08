@@ -16,6 +16,7 @@ export const OrderSchema = pgTable("orders", {
   id: varchar("id", { length: ID_LENGTH })
     .$defaultFn(() => createId())
     .primaryKey(),
+  userId: varchar("user_id", { length: ID_LENGTH }).notNull(),
   title: varchar("title", { length: 191 }).notNull(),
   price: integer("price").notNull(),
   orderNumber: integer("order_number").notNull(),
@@ -27,5 +28,4 @@ export const OrderSchema = pgTable("orders", {
   updatedAt: timestamp("updated_at", { withTimezone: true }).$onUpdate(
     () => new Date()
   ),
-  userId: varchar("user_id", { length: ID_LENGTH }).notNull(),
 });

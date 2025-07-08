@@ -7,6 +7,7 @@ import { getAllOrders } from "../application/get-all-orders.usecase";
 import { getOrderById } from "../application/get-order-by-id.usecase";
 import { updateOrder } from "../application/update-order.usecase";
 import { updateOrderItems } from "../application/update-order-items.usecase";
+import { MenuItemRepository } from "@/menu/menu-items/infrastructure/menu-item.repository";
 
 export const OrderController = new Elysia({
   prefix: "/orders",
@@ -17,48 +18,84 @@ export const OrderController = new Elysia({
 
   .post(
     "/create",
-    async ({ body, validateSession }) => {
+    async ({ body, validateSession, set }) => {
       try {
         const user = await validateSession();
 
-        if (!user || (user.role !== "customer" && user.role !== "kitchen")) {
+        // Validate menu item IDs
+        const { items, description } = body;
+        if (!Array.isArray(items) || items.length === 0) {
+          set.status = 400;
           return {
             status: "error",
-            message: "Unauthorized",
+            message: "At least one menu item must be provided.",
           };
         }
-
-        const order = await createOrder({ ...body, userId: user.id });
-
+        const menuItems = await Promise.all(
+          items.map(async (id) => await MenuItemRepository.getById(id))
+        );
+        if (menuItems.some((item) => !item || !item.isAvailable)) {
+          set.status = 400;
+          return {
+            status: "error",
+            message: "One or more menu items are invalid or unavailable.",
+          };
+        }
+        // All items are non-null and available at this point
+        const validMenuItems = menuItems.filter(
+          (item): item is NonNullable<typeof item> => !!item
+        );
+        // Calculate total price
+        const totalPrice = validMenuItems.reduce(
+          (sum, item) => sum + item.price,
+          0
+        );
+        // Generate a title (e.g., "Order for user {user.id}")
+        const title = `Order for user ${user.id}`;
+        // Generate order number (could be improved for concurrency)
+        const orderNumber = Math.floor(Math.random() * 1000000);
+        const status = "active";
+        const order = await createOrder({
+          title,
+          price: totalPrice,
+          orderNumber,
+          status,
+          userId: user.id,
+          description,
+        });
         return {
           status: "success",
-          data: order,
+          data: {
+            title: order.title,
+            price: order.price,
+            orderNumber: order.orderNumber,
+            status: order.status,
+          },
           message: "Order created successfully",
         };
       } catch (error) {
+        set.status = 400;
         return {
           status: "error",
           message: "Failed to create order",
-          data: undefined,
         };
       }
     },
     {
       body: t.Object({
-        title: t.String(),
-        price: t.Number(),
-        orderNumber: t.Number(),
-        status: t.Union([
-          t.Literal("active"),
-          t.Literal("completed"),
-          t.Literal("cancelled"),
-        ]),
+        items: t.Array(t.String()),
         description: t.Optional(t.String()),
       }),
       response: {
         200: t.Object({
           status: t.String(),
-          data: OrderType,
+          data: t.Object({
+            title: t.String(),
+            price: t.Number(),
+            orderNumber: t.Number(),
+            status: t.String(),
+          }),
+          message: t.String(),
         }),
         400: t.Object({
           status: t.String(),
@@ -89,9 +126,12 @@ export const OrderController = new Elysia({
         };
       }
 
+      const page = query.page ?? 1;
+      const limit = query.limit ?? 10;
+
       const orders = await getAllOrders({
-        page: query.page,
-        limit: query.limit,
+        page,
+        limit,
         user,
       });
 
@@ -103,8 +143,8 @@ export const OrderController = new Elysia({
     },
     {
       query: t.Object({
-        page: t.Number(),
-        limit: t.Number(),
+        page: t.Optional(t.Number()),
+        limit: t.Optional(t.Number()),
       }),
       response: {
         200: t.Object({

@@ -27,4 +27,5 @@ export const menuItems = pgTable("menu_items", {
   updatedAt: timestamp("updated_at", { withTimezone: true }).$onUpdate(
     () => new Date()
   ),
+  slug: varchar("slug", { length: 191 }).notNull().unique(),
 });
