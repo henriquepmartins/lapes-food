@@ -1,7 +1,7 @@
 import { authMiddleware } from "@/shared/infrastructure/auth/auth.middleware";
 import Elysia from "elysia";
 import { createOrder } from "../application/create-order.usecase";
-import { t } from "elysia";
+import { t, type Context } from "elysia";
 import { OrderType } from "../domain/order.type";
 import { getAllOrders } from "../application/get-all-orders.usecase";
 import { getOrderById } from "../application/get-order-by-id.usecase";
@@ -341,21 +341,64 @@ export const OrderController = new Elysia({
 
   .put(
     "/:id/items",
-    async ({ validateSession, params, body }) => {
+    async ({
+      validateSession,
+      params,
+      body,
+      set,
+    }: {
+      validateSession: () => Promise<any>;
+      params: { id: string };
+      body: { items: string[]; orderNumber: number; description?: string };
+      set: any;
+    }) => {
       const user = await validateSession();
 
       if (!user || user.role !== "admin") {
+        set.status = 401;
         return {
           status: "error",
           message: "Unauthorized",
         };
       }
 
-      const order = await updateOrderItems(params.id, body.items);
+      if (!Array.isArray(body.items) || body.items.length === 0) {
+        set.status = 400;
+        return {
+          status: "error",
+          message: "At least one menu item id must be provided.",
+        };
+      }
+
+      const menuItems = await Promise.all(
+        body.items.map(async (id) => {
+          const item = await MenuItemRepository.getById(id);
+          return item;
+        })
+      );
+      if (menuItems.some((item) => !item || !item.isAvailable)) {
+        set.status = 400;
+        return {
+          status: "error",
+          message: "One or more menu items are invalid or unavailable.",
+        };
+      }
+      const validMenuItems = menuItems.filter(
+        (item): item is NonNullable<typeof item> => !!item
+      );
+
+      const order = await updateOrderItems(
+        params.id,
+        validMenuItems.map((item) => item.id),
+        body.orderNumber,
+        body.description
+      );
+
+      const updatedOrder = await getOrderById(params.id);
 
       return {
         status: "success",
-        data: order,
+        data: updatedOrder,
         message: "Order items updated successfully",
       };
     },
@@ -364,26 +407,21 @@ export const OrderController = new Elysia({
         id: t.String(),
       }),
       body: t.Object({
-        items: t.Array(
-          t.Object({
-            name: t.String(),
-            price: t.Number(),
-          })
-        ),
+        items: t.Array(t.String()),
+        orderNumber: t.Number(),
+        description: t.Optional(t.String()),
       }),
       response: {
         200: t.Object({
           status: t.String(),
-          data: t.Object({
-            items: t.Array(
-              t.Object({
-                name: t.String(),
-                price: t.Number(),
-              })
-            ),
-          }),
+          data: OrderType,
+          message: t.String(),
         }),
         401: t.Object({
+          status: t.String(),
+          message: t.String(),
+        }),
+        400: t.Object({
           status: t.String(),
           message: t.String(),
         }),
