@@ -1,15 +1,12 @@
 import { authMiddleware } from "@/shared/infrastructure/auth/auth.middleware";
-import { env } from "@/shared/infrastructure/env";
 import { UserType } from "@/users/domain/user.type";
 import Elysia, { t } from "elysia";
 import { getUserById } from "../application/get-user-by-id.usecase";
 import { deleteUser } from "../application/delete-user.usecase";
-import { UserRepository } from "../infrastructure/user.repository";
 import { getAllUsers } from "../application/get-all-users.usecase";
 import { updateUser } from "../application/update-user.usecase";
 import { createUser } from "../application/create-user.usecase";
 import { UnauthorizedError } from "@/shared/infrastructure/errors/unauthorized-error";
-import { hashPassword } from "@/shared/infrastructure/auth/password";
 
 export const UserController = new Elysia({
   prefix: "/users",

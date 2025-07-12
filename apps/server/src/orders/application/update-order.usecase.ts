@@ -1,18 +1,18 @@
-import { OrderType } from "../domain/order.type";
+import { OrderRepository } from "../infrastructure/order.repository";
 
 export const updateOrder = async (
   id: string,
   status: "active" | "completed" | "cancelled"
 ) => {
-  const order = await OrderType.findByIdAndUpdate(
-    id,
-    { status },
-    { new: true }
-  );
-
-  if (!order) {
+  const existingOrder = await OrderRepository.getById(id);
+  if (!existingOrder) {
     throw new Error("Order not found");
   }
 
-  return order;
+  const updatedOrder = await OrderRepository.update(id, {
+    ...existingOrder,
+    status,
+  });
+
+  return updatedOrder;
 };

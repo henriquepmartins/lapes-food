@@ -1,27 +1,21 @@
 import {
-  integer,
-  pgTable,
-  text,
-  timestamp,
-  varchar,
-} from "drizzle-orm/pg-core";
-import {
+  deliveryStatusEnum,
   ID_LENGTH,
-  orderStatusEnum,
 } from "@/shared/infrastructure/imports.schema";
 import { createId } from "@paralleldrive/cuid2";
 import { sql } from "drizzle-orm";
+import { integer, pgTable, timestamp, varchar } from "drizzle-orm/pg-core";
 
-export const OrderSchema = pgTable("orders", {
+export const DeliverySchema = pgTable("delivery", {
   id: varchar("id", { length: ID_LENGTH })
     .$defaultFn(() => createId())
     .primaryKey(),
-  userId: varchar("user_id", { length: ID_LENGTH }).notNull(),
-  title: varchar("title", { length: 191 }).notNull(),
+  orderId: varchar("order_id", { length: ID_LENGTH }).notNull(),
+  deliveryDriverId: varchar("delivery_driver_id", {
+    length: ID_LENGTH,
+  }).notNull(),
   price: integer("price").notNull(),
-  orderNumber: integer("order_number").notNull(),
-  status: orderStatusEnum("status").notNull().default("active"),
-  description: text("description"),
+  status: deliveryStatusEnum("status").notNull().default("pending"),
   createdAt: timestamp("created_at", { withTimezone: true })
     .default(sql`CURRENT_TIMESTAMP`)
     .notNull(),

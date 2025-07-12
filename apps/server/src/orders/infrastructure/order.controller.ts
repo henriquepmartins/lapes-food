@@ -1,11 +1,13 @@
 import { authMiddleware } from "@/shared/infrastructure/auth/auth.middleware";
 import Elysia from "elysia";
 import { createOrder } from "../application/create-order.usecase";
-import { t } from "elysia";
+import { t, type Context } from "elysia";
 import { OrderType } from "../domain/order.type";
 import { getAllOrders } from "../application/get-all-orders.usecase";
 import { getOrderById } from "../application/get-order-by-id.usecase";
 import { updateOrder } from "../application/update-order.usecase";
+import { updateOrderItems } from "../application/update-order-items.usecase";
+import { MenuItemRepository } from "@/menu/menu-items/infrastructure/menu-item.repository";
 
 export const OrderController = new Elysia({
   prefix: "/orders",
@@ -16,47 +18,85 @@ export const OrderController = new Elysia({
 
   .post(
     "/create",
-    async ({ body, validateSession }) => {
+    async ({ body, validateSession, set }) => {
       try {
         const user = await validateSession();
 
-        if (!user || (user.role !== "customer" && user.role !== "kitchen")) {
+        const { items, description } = body;
+        if (!Array.isArray(items) || items.length === 0) {
+          set.status = 400;
           return {
             status: "error",
-            message: "Unauthorized",
+            message: "At least one menu item must be provided.",
           };
         }
+        const menuItems = await Promise.all(
+          items.map(async (id) => {
+            const item = await MenuItemRepository.getById(id);
+            return item;
+          })
+        );
+        if (menuItems.some((item) => !item || !item.isAvailable)) {
+          set.status = 400;
+          return {
+            status: "error",
+            message: "One or more menu items are invalid or unavailable.",
+          };
+        }
+        const validMenuItems = menuItems.filter(
+          (item): item is NonNullable<typeof item> => !!item
+        );
+        const totalPrice = validMenuItems.reduce(
+          (sum, item) => sum + item.price,
+          0
+        );
 
-        const order = await createOrder(body);
+        const title = validMenuItems.map((item) => item.name).join(", ");
+        const orderNumber = Math.floor(Math.random() * 1000000);
+        const status = "active";
+
+        const order = await createOrder({
+          title,
+          price: totalPrice,
+          orderNumber,
+          status,
+          userId: user.id,
+          description,
+        });
 
         return {
           status: "success",
-          data: order,
+          data: {
+            title: order.title,
+            price: order.price,
+            orderNumber: order.orderNumber,
+            status: order.status,
+          },
           message: "Order created successfully",
         };
       } catch (error) {
+        set.status = 400;
         return {
           status: "error",
           message: "Failed to create order",
-          data: undefined,
         };
       }
     },
     {
       body: t.Object({
-        title: t.String(),
-        price: t.Number(),
-        orderNumber: t.Number(),
-        status: t.Union([
-          t.Literal("active"),
-          t.Literal("completed"),
-          t.Literal("cancelled"),
-        ]),
+        items: t.Array(t.String()),
+        description: t.Optional(t.String()),
       }),
       response: {
         200: t.Object({
           status: t.String(),
-          data: OrderType,
+          data: t.Object({
+            title: t.String(),
+            price: t.Number(),
+            orderNumber: t.Number(),
+            status: t.String(),
+          }),
+          message: t.String(),
         }),
         400: t.Object({
           status: t.String(),
@@ -77,10 +117,11 @@ export const OrderController = new Elysia({
 
   .get(
     "/",
-    async ({ validateSession, query }) => {
+    async ({ validateSession, set }) => {
       const user = await validateSession();
 
       if (!user || user.role !== "admin") {
+        set.status = 401;
         return {
           status: "error",
           message: "Unauthorized",
@@ -88,8 +129,10 @@ export const OrderController = new Elysia({
       }
 
       const orders = await getAllOrders({
-        page: query.page,
-        limit: query.limit,
+        user,
+        page: 1,
+        limit: 10,
+        query: "",
       });
 
       return {
@@ -99,10 +142,6 @@ export const OrderController = new Elysia({
       };
     },
     {
-      query: t.Object({
-        page: t.Number(),
-        limit: t.Number(),
-      }),
       response: {
         200: t.Object({
           status: t.String(),
@@ -129,7 +168,7 @@ export const OrderController = new Elysia({
     async ({ validateSession, params }) => {
       const user = await validateSession();
 
-      if (!user || user.role !== "admin") {
+      if (!user || (user.role !== "admin" && user.role !== "kitchen")) {
         return {
           status: "error",
           message: "Unauthorized",
@@ -166,6 +205,87 @@ export const OrderController = new Elysia({
     }
   )
 
+  .get(
+    "/:id/track",
+    async ({ validateSession, params }) => {
+      const user = await validateSession();
+
+      if (!user || user.role !== "customer") {
+        return {
+          status: "error",
+          message: "Unauthorized",
+        };
+      }
+
+      const order = await getOrderById(params.id);
+      if (!order) {
+        return {
+          status: "error",
+          message: "Order not found",
+        };
+      }
+
+      return {
+        status: "success",
+        data: { status: order.status as "active" | "completed" | "cancelled" },
+      };
+    },
+    {
+      params: t.Object({
+        id: t.String(),
+      }),
+      response: {
+        200: t.Object({
+          status: t.Literal("success"),
+          data: t.Object({
+            status: t.Union([
+              t.Literal("active"),
+              t.Literal("completed"),
+              t.Literal("cancelled"),
+            ]),
+          }),
+        }),
+        401: t.Object({
+          status: t.Literal("error"),
+          message: t.String(),
+        }),
+        404: t.Object({
+          status: t.Literal("error"),
+          message: t.String(),
+        }),
+      },
+      detail: {
+        tags: ["Orders"],
+        summary: "Rastrear status do pedido",
+        description: "Retorna apenas o status do pedido pelo ID.",
+        responses: {
+          200: {
+            description: "Status do pedido retornado com sucesso.",
+            content: {
+              "application/json": {
+                example: {
+                  status: "success",
+                  data: { status: "active" },
+                },
+              },
+            },
+          },
+          404: {
+            description: "Pedido não encontrado.",
+            content: {
+              "application/json": {
+                example: {
+                  status: "error",
+                  message: "Order not found",
+                },
+              },
+            },
+          },
+        },
+      },
+    }
+  )
+
   .put(
     "/:id/status",
     async ({ validateSession, params, body }) => {
@@ -197,5 +317,119 @@ export const OrderController = new Elysia({
           t.Literal("cancelled"),
         ]),
       }),
+      response: {
+        200: t.Object({
+          status: t.String(),
+          data: OrderType,
+        }),
+        401: t.Object({
+          status: t.String(),
+          message: t.String(),
+        }),
+        403: t.Object({
+          status: t.String(),
+          message: t.String(),
+        }),
+      },
+      detail: {
+        tags: ["Orders"],
+        summary: "Atualizar status do pedido",
+        description: "Atualiza o status de um pedido específico.",
+      },
+    }
+  )
+
+  .put(
+    "/:id/items",
+    async ({
+      validateSession,
+      params,
+      body,
+      set,
+    }: {
+      validateSession: () => Promise<any>;
+      params: { id: string };
+      body: { items: string[]; orderNumber: number; description?: string };
+      set: any;
+    }) => {
+      const user = await validateSession();
+
+      if (!user || user.role !== "admin") {
+        set.status = 401;
+        return {
+          status: "error",
+          message: "Unauthorized",
+        };
+      }
+
+      if (!Array.isArray(body.items) || body.items.length === 0) {
+        set.status = 400;
+        return {
+          status: "error",
+          message: "At least one menu item id must be provided.",
+        };
+      }
+
+      const menuItems = await Promise.all(
+        body.items.map(async (id) => {
+          const item = await MenuItemRepository.getById(id);
+          return item;
+        })
+      );
+      if (menuItems.some((item) => !item || !item.isAvailable)) {
+        set.status = 400;
+        return {
+          status: "error",
+          message: "One or more menu items are invalid or unavailable.",
+        };
+      }
+      const validMenuItems = menuItems.filter(
+        (item): item is NonNullable<typeof item> => !!item
+      );
+
+      const order = await updateOrderItems(
+        params.id,
+        validMenuItems.map((item) => item.id),
+        body.orderNumber,
+        body.description
+      );
+
+      const updatedOrder = await getOrderById(params.id);
+
+      return {
+        status: "success",
+        data: updatedOrder,
+        message: "Order items updated successfully",
+      };
+    },
+    {
+      params: t.Object({
+        id: t.String(),
+      }),
+      body: t.Object({
+        items: t.Array(t.String()),
+        orderNumber: t.Number(),
+        description: t.Optional(t.String()),
+      }),
+      response: {
+        200: t.Object({
+          status: t.String(),
+          data: OrderType,
+          message: t.String(),
+        }),
+        401: t.Object({
+          status: t.String(),
+          message: t.String(),
+        }),
+        400: t.Object({
+          status: t.String(),
+          message: t.String(),
+        }),
+      },
+      detail: {
+        tags: ["Orders"],
+        summary: "Adicionar itens ao pedido",
+        description: "Adiciona itens a um pedido específico.",
+      },
     }
   );

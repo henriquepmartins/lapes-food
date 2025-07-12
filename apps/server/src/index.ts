@@ -50,7 +50,7 @@ app.use(
       info: {
         title: "Lapes Food API",
         version: packageJson.version || "1.0.0",
-        description: `API pública e privada do Lapes Food.\n\n**Autenticação:**\n- Endpoints protegidos requerem cookie de sessão (session_lapes_food).\n- Faça login via \`/auth/login\` para obter o cookie.\n\n**Ambientes:**\n- Dev: http://localhost:${
+        description: `API privada do Lapes Food.\n\n**Autenticação:**\n- Endpoints protegidos requerem cookie de sessão (session_lapes_food).\n- Faça login via \`/auth/login\` para obter o cookie.\n\n**Ambientes:**\n- Dev: http://localhost:${
           env.PORT
         }\n- Prod: https://api.lapes.com.br\n\n© ${new Date().getFullYear()} Lapes Cesupa. Todos os direitos reservados.`,
         contact: {
