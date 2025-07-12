@@ -1,83 +1,101 @@
-# lapes-food
+# Lapes Food
 
-This project was created with [Better-T-Stack](https://github.com/AmanVarshney01/create-better-t-stack), a modern TypeScript stack that combines Next.js, Elysia, and more.
+Bem-vindo ao **Lapes Food**! Este projeto foi desenvolvido como solução para o Desafio Backend LAPES, com o objetivo de criar um sistema completo de administração para restaurantes, incluindo autenticação, gerenciamento de cardápio, pedidos, delivery, avaliações, relatórios e integrações modernas.
 
-## Features
+---
 
-- **TypeScript** - For type safety and improved developer experience
-- **Next.js** - Full-stack React framework
-- **TailwindCSS** - Utility-first CSS for rapid UI development
-- **shadcn/ui** - Reusable UI components
-- **Elysia** - Type-safe, high-performance framework
-- **Bun** - Runtime environment
-- **Drizzle** - TypeScript-first ORM
-- **PostgreSQL** - Database engine
-- **Authentication** - Email & password authentication with Better Auth
-- **Turborepo** - Optimized monorepo build system
+## 🚀 Stack Utilizada
 
-## Getting Started
+- **TypeScript** – Segurança de tipos e melhor experiência de desenvolvimento
+- **Next.js** – Framework full-stack React
+- **TailwindCSS** – Estilização rápida e moderna
+- **shadcn/ui** – Componentes de UI reutilizáveis
+- **Elysia** – Framework backend rápido e type-safe
+- **Bun** – Ambiente de execução moderno
+- **Drizzle ORM** – ORM para TypeScript
+- **PostgreSQL** – Banco de dados relacional
+- **Autenticação** – Email e senha com Better Auth
+- **Turborepo** – Monorepo otimizado
 
-First, install the dependencies:
+---
 
-```bash
-bun install
+## 📋 Funcionalidades
+
+- Sistema completo de autenticação com refresh tokens
+- CRUD de usuários, categorias, pratos, pedidos, avaliações e entregadores
+- Upload e gestão de fotos dos pratos (AWS S3)
+- Sistema de roles e permissões (admin, cozinha, cliente)
+- Notificações por Email (S3)
+- Cálculo de frete e áreas de entrega
+- Relatórios e analytics para administração
+- Logs estruturados e tratamento robusto de erros
+- Busca avançada no cardápio
+- Testes unitários
+- Documentação da API (Swagger/OpenAPI)
+
+---
+
+## 🛠️ Como rodar o projeto
+
+1. **Clone o repositório**
+   ```sh
+   git clone https://github.com/seu-usuario/lapes-food.git
+   cd lapes-food
+   ```
+
+2. **Instale as dependências**
+   ```sh
+   bun install
+   ```
+
+3. **Configure o banco de dados**
+   - Certifique-se de ter o PostgreSQL instalado e rodando.
+   - Configure as variáveis de ambiente (`.env`) com as credenciais do banco.
+   - Execute as migrations:
+     ```sh
+     bun run drizzle:push
+     ```
+
+4. **Inicie a aplicação**
+   ```sh
+   bun run dev
+   ```
+
+---
+
+## 📦 Configuração de Integrações
+
+- **S3**: Configure as chaves de acesso no arquivo `.env`
+- **Email**: Configure as credenciais de envio de notificações no arquivo `.env`
+
+---
+
+## 🧪 Testes
+
+Execute os testes unitários:
+```sh
+bun run test
 ```
 
-## Database Setup
+---
 
-This project uses PostgreSQL with Drizzle ORM.
+## 📑 Documentação
 
-1. Make sure you have a PostgreSQL database set up.
-2. Update your `apps/server/.env` file with your PostgreSQL connection details.
+Acesse a documentação completa da API em `/docs` (Swagger) após iniciar o projeto.
 
-3. Apply the schema to your database:
+---
 
-```bash
-bun db:push
-```
+## 🗂 Estrutura do Projeto
 
-Then, run the development server:
+- **/apps** – Aplicações (frontend e backend)
+- **/packages** – Bibliotecas compartilhadas e utilitários
+- **/drizzle** – Migrations e modelos do banco
+- **/docs** – Documentação
 
-```bash
-bun dev
-```
+---
 
-Open [http://localhost:3001](http://localhost:3001) in your browser to see the web application.
-The API is running at [http://localhost:3000](http://localhost:3000).
+## 🤝 Contribuição
 
-## Project Structure
+Contribuições são bem-vindas! Siga o padrão de commits [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/) e utilize Pull Requests.
 
-```
-lapes-food/
-├── apps/
-│   ├── web/         # Frontend application (Next.js)
-│   └── server/      # Backend API (Elysia)
-```
-
-## Available Scripts
-
-- `bun dev`: Start all applications in development mode
-- `bun build`: Build all applications
-- `bun dev:web`: Start only the web application
-- `bun dev:server`: Start only the server
-- `bun check-types`: Check TypeScript types across all apps
-- `bun db:push`: Push schema changes to database
-- `bun db:studio`: Open database studio UI
-
-## Documentação da API
-
-A documentação interativa da API está disponível via Swagger:
-
-- **Ambiente de desenvolvimento:** [http://localhost:3000/docs](http://localhost:3000/docs)
-- **Produção:** [https://api.lapes.com.br/docs](https://api.lapes.com.br/docs)
-
-### Autenticação
-
-A maioria dos endpoints requer autenticação via cookie de sessão (`session_lapes_food`).
-
-1. Faça login usando o endpoint `/auth/login` para receber o cookie de sessão.
-2. Inclua o cookie nas requisições subsequentes para acessar endpoints protegidos.
-
-### Exemplos de uso
-
-Acesse `/docs` para visualizar exemplos de requisições, respostas e schemas diretamente na interface Swagger.
+---
