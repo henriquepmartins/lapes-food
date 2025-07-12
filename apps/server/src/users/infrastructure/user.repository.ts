@@ -8,7 +8,14 @@ export interface UserRecord {
   lastName: string;
   password: string | null;
   email: string;
-  role: "admin" | "customer" | "kitchen";
+  role: "admin" | "customer" | "kitchen" | "driver";
+  cep: string | null;
+  rua: string | null;
+  bairro: string | null;
+  cidade: string | null;
+  estado: string | null;
+  numero: string | null;
+  complemento: string | null;
   createdAt: Date;
   updatedAt: Date | null;
 }

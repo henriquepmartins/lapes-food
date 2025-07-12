@@ -5,7 +5,12 @@ export const ID_LENGTH = 36;
 /**
  * Users
  */
-export const userRoleEnum = pgEnum("role", ["admin", "customer", "kitchen"]);
+export const userRoleEnum = pgEnum("role", [
+  "admin",
+  "customer",
+  "kitchen",
+  "driver",
+]);
 
 /**
  * Orders
@@ -17,3 +22,13 @@ export const orderStatusEnum = pgEnum("status", [
 ]);
 
 export const ORDER_STATUSES = ["active", "completed", "cancelled"] as const;
+
+/**
+ * Delivery
+ */
+export const deliveryStatusEnum = pgEnum("status", [
+  "pending",
+  "in_progress",
+  "delivered",
+  "cancelled",
+]);
