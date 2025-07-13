@@ -7,7 +7,7 @@ export const DeliveryType = t.Object({
   price: t.Number(),
   status: t.String(),
   createdAt: t.Date(),
-  updatedAt: t.Date(),
+  updatedAt: t.Union([t.Date(), t.Null()]),
 });
 
 export type Delivery = Static<typeof DeliveryType>;
